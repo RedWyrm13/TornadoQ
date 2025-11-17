@@ -1,36 +1,29 @@
-def InitializeModel(model, load_path = None, classifier = "Binary", input_size = 8):
+from tornadoq.pqc import InitializePQC
+import torch.nn as nn
+import torch
+
+def InitializeModel(model, load_path = None, classifier = "binary", input_size = 8):
 
     ############ Conditionals for all model types ############## 
     ### DNN Various Input ###
     if model == "DNN":
         #Initialize architecture here
-        if classifier = "Binary":
+        if classifier == "binary":
             model = BinaryDNN(input_size)
-        if classifier = "Multiclass":
+        if classifier == "multiclass":
             model = MulticlassDNN(input_size)
 
     ### PQC Models ###
-    else if model == "RandomLayer":
+    elif model in ("RandomLayer", "StronglyEntangling"):
+        
         #Initialize PQC
-        from QuantumCircuits import InitializePQC
-        InitializePQC(model)
+        pqc = InitializePQC(model)
 
         #Initialize architecture here
-        if classifier = "Binary":
-            model = 
-        if classifier = "Multiclass":
-            model = 
-
-    else if model == "StronglyEntangled":
-        #Initialize PQC
-        from QuantumCircuits import InitializePQC
-        InitializePQC(model)
-
-        #Initialize architecture here
-        if classifier = "Binary":
-            model = BinaryPQC()
-        if classifier = "Multiclass":
-            model = MulticlassPQC()
+        if classifier == "binary":
+            model = BinaryPQC(pqc)
+        if classifier == "multiclass":
+            model = MulticlassPQC(pqc) 
 
     else:
         print("Not a valid model choice...")
@@ -105,17 +98,17 @@ class MulticlassDNN(nn.Module):
     def forward(self, features):
         feats_encoded = self.feature_encoder(features)
         class_target = self.classifier(feats_encoded)
-
+        
         return class_target  # Shape: (batch_size, 4)
 
 #############################################################
 # Binary PQC - Variable Circuit
 class BinaryPQC(nn.Module):
-    def __init__(self):
+    def __init__(self, QuantumFeatureEmbeddingBatch):
         super().__init__()
 
         # Encodes features from dataset
-        self.feature_encoder = QuantumFeatureEmbeddingBatch()
+        self.feature_encoder = QuantumFeatureEmbeddingBatch
 
         # Classifies based on encoded features
         self.classifier = nn.Sequential(
@@ -138,11 +131,11 @@ class BinaryPQC(nn.Module):
 #############################################################
 # Multiclass PQC - Variable Circuit
 class MulticlassPQC(nn.Module):
-    def __init__(self):
+    def __init__(self, QuantumFeatureEmbeddingBatch):
         super().__init__()
 
         # Encodes features from dataset
-        self.feature_encoder = QuantumFeatureEmbeddingBatch()
+        self.feature_encoder = QuantumFeatureEmbeddingBatch
 
         # Classifies based on encoded features
         self.classifier = nn.Sequential(
@@ -152,14 +145,13 @@ class MulticlassPQC(nn.Module):
             nn.Linear(128, 64),
             nn.LeakyReLU(0.2),
             nn.Dropout(0.2),
-            nn.Linear(64, 4),
-            nn.Sigmoid()
+            nn.Linear(64, 4)
         )
 
     def forward(self, features):
         feats_encoded = self.feature_encoder(features)
         class_probs = self.classifier(feats_encoded.float())
-
-        return class_probs  # Shape: (batch_size, 1)
+        
+        return class_probs  # Shape: (batch_size, 4)
 
 #############################################################

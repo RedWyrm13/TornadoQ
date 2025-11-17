@@ -1,6 +1,7 @@
 from typing import List
-from tornadoq.preprocess import load_csv
 from tornadoq.shadows import generate_shadows, extend_features
+import os
+import pandas as pd
 
 def load_all_data(filenames: List[str], withShadows: bool = False, filesave_name: str = None):
     """
@@ -12,7 +13,15 @@ def load_all_data(filenames: List[str], withShadows: bool = False, filesave_name
     # Contains dataset name as key (test, train, or val), and the actual pandas df as the value
     dfs = {}
     for filename in filenames:
-        df = load_csv(filename)
+        
+        ext = os.path.splitext(filename)[1].lower()
+
+        if ext == ".csv":
+            df = pd.read_csv(filename)
+        elif ext in [".xls", ".xlsx"]:
+            df = pd.read_excel(filename)
+        else:
+            raise ValueError(f"Unsupported file extension: {ext}")
 
         # Feature engineering with random shadows if this flag is true
         if withShadows:
@@ -27,6 +36,10 @@ def load_all_data(filenames: List[str], withShadows: bool = False, filesave_name
             dfs['test'] = df
         else:
             raise ValueError("filename must contain identifiable name. Either 'train', 'val' or 'test' ")
-
+            
+    print(f"✓ Training data loaded: {dfs['train'].shape[0]} rows, {dfs['train'].shape[1]} columns")
+    print(f"✓ Test data loaded: {dfs['test'].shape[0]} rows, {dfs['test'].shape[1]} columns")
+    print(f"✓ Validation data loaded: {dfs['val'].shape[0]} rows, {dfs['val'].shape[1]} columns")
+    
     return dfs
             

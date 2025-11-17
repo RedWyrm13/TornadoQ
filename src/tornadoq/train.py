@@ -2,9 +2,12 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import torch.nn as nn
+from tornadoq.helper import accuracy
+import os
 
-def train(model, n_epochs, lr, train_loader, val_loader)
+def train(model, n_epochs, lr, train_loader, val_loader, classifier):
 
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = model.to(device)
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999))
@@ -14,7 +17,11 @@ def train(model, n_epochs, lr, train_loader, val_loader)
     losses = []
     
     # Initialize metrics
-    bce = nn.BCELoss()
+    if classifier == "binary":
+        loss_fn = nn.BCELoss()
+    if classifier == "multiclass":
+        loss_fn = nn.CrossEntropyLoss()
+        
     metric = accuracy
     best_val_metric = 0
     best_val_loss = 999
@@ -34,32 +41,40 @@ def train(model, n_epochs, lr, train_loader, val_loader)
         train_loss, train_metric = 0.0, 0.0
     
         for features, target in train_loader:
-            features, target = features.to(device), target.unsqueeze(-1).to(device)
-
+            if classifier == "binary":
+                features, target = features.to(device), target.unsqueeze(-1).to(device)
+            if classifier == "multiclass":
+                features, target = features.to(device), target.long().to(device)
+            
             optimizer.zero_grad()
             outputs = model(features)
-            loss = bce(outputs, target)
+
+            loss = loss_fn(outputs, target)
             loss.backward()
             optimizer.step()
 
-            train_loss += loss.item()
-            train_metric += metric(outputs, target)
+            train_loss = train_loss + loss.item()
+            train_metric = train_metric + metric(outputs, target)
 
-        train_loss /= len(train_loader)
-        train_metric /= len(train_loader)
+        train_loss = train_loss / len(train_loader)
+        train_metric = train_metric / len(train_loader)
 
         # Validation
         model.eval()
         val_loss, val_metric = 0.0, 0.0
         with torch.no_grad():
-            for X_val, y_val in val_loader:
-                X_val, y_val = X_val.to(device), y_val.unsqueeze(-1).to(device)
-                outputs = model(X_val)
-                val_loss += bce(outputs, y_val).item()
-                val_metric += metric(outputs, y_val)
+            for features, target in train_loader:
+                if classifier == "binary":
+                    features, target = features.to(device), target.unsqueeze(-1).to(device)
+                if classifier == "multiclass":
+                    features, target = features.to(device), target.long().to(device)
+            
+                outputs = model(features)
+                val_loss = val_loss + loss_fn(outputs, target).item()
+                val_metric = val_metric + metric(outputs, target)
 
-        val_loss /= len(val_loader)
-        val_metric /= len(val_loader)
+        val_loss = val_loss / len(val_loader)
+        val_metric = val_metric / len(val_loader)
 
         # Logging
         history['epoch'].append(epoch)
@@ -68,8 +83,8 @@ def train(model, n_epochs, lr, train_loader, val_loader)
         history['val_loss'].append(val_loss)
         history['val_metric'].append(val_metric)
 
-        # Report every 10th epoch
-        if epoch % 10 == 9:
+        # Report every 5th epoch
+        if epoch % 5 == 4:
             print(f'Epoch [{epoch+1}/{n_epochs}] | Train Loss: {train_loss:.4f} | '
             f'Train Acc: {train_metric:.4f} | Val Loss: {val_loss:.4f} | Val Acc: {val_metric:.4f}')
 

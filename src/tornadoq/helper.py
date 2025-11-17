@@ -1,13 +1,20 @@
-#!/usr/bin/env python
-# coding: utf-8
+import matplotlib.pyplot as plt
+import seaborn as sns
+import torch
 
 # Helper functions for plotting, metrics, etc
-from Imports import *
 
 def accuracy(outputs, targets):
-    preds = (outputs > 0.5).float()
-    correct = (preds == targets).float().sum()
-    return correct / targets.numel()
+
+    if outputs.size(0) > 1:
+        preds = torch.argmax(outputs, dim=1)   # [batch]
+        correct = (preds == targets).sum().float()
+        return correct / targets.size(0)
+
+    else:
+        preds = (outputs > 0.5).float()
+        correct = (preds == targets).float().sum()
+        return correct / targets.numel()
 
 def plot_metrics(g_losses, d_losses):
     epochs = range(1, len(g_losses) + 1)
