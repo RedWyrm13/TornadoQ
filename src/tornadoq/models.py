@@ -30,7 +30,7 @@ def InitializeModel(model, load_path = None, classifier = "binary", input_size =
         return
 
     if load_path != None:
-        from load import load
+        from tornadoq.loadSaveEval import load
         load(model, load_path)
         
     return model
