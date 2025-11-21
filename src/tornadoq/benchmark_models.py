@@ -6,59 +6,116 @@ from imblearn.over_sampling import SMOTE
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
-
 try:
-    from xgboost import XGBClassifier # type: ignore
-except Exception: # pragma: no cover
-    XGBClassifier = None # type: ignore
+    from xgboost import XGBClassifier  # type: ignore
+except Exception:  # pragma: no cover
+    XGBClassifier = None  # type: ignore
 
 
 logger = logging.getLogger(__name__)
 
 
+# -------------------------------------------------------------------------
+# Helper: Builds a pipeline with (preprocessor → optional SMOTE → classifier)
+# -------------------------------------------------------------------------
+def _make_pipeline(preprocessor, clf, random_state, use_smote):
+    steps = [("prep", preprocessor)]
+    if use_smote:
+        steps.append(("smote", SMOTE(random_state=random_state)))
+    steps.append(("clf", clf))
+    return ImbPipeline(steps)
 
 
-def get_binary_estimators(preprocessor, random_state: int = 42, use_smote: bool = True, models_to_test = {"logreg", "rf", "gb", "xgb"}) -> Dict[str, object]:
-    """Binary classifiers wrapped in pipelines. Optional SMOTE **inside** the pipeline
-    so that CV resampling occurs only on training folds.
+# -------------------------------------------------------------------------
+# BINARY CLASSIFIERS
+# -------------------------------------------------------------------------
+def get_binary_estimators(
+    preprocessor,
+    random_state: int = 42,
+    use_smote: bool = True,
+    models_to_test={"logreg", "rf", "gb", "xgb"},
+) -> Dict[str, object]:
     """
-    # Base steps with preprocessor and optional SMOTE
-    base_steps = [("prep", preprocessor)]
-    if use_smote:
-        base_steps.append(("smote", SMOTE(random_state=random_state)))
+    Returns a dictionary of binary classifiers wrapped inside pipelines.
+    SMOTE is applied **inside** the pipeline so oversampling is done per CV fold.
+    """
 
-    # Initialize models dictionary
-    models: Dict[str, object] = {}
-
-    # Add models to the dictionary only if they are in models_to_test
-    if 'logreg' in models_to_test:
-        models["logreg"] = ImbPipeline(base_steps + [("clf", LogisticRegression(max_iter=2000, class_weight="balanced", random_state=random_state))])
-
-    if 'rf' in models_to_test:
-        models["rf"] = ImbPipeline(base_steps + [("clf", RandomForestClassifier(n_estimators=400, max_depth=None, min_samples_split=2, min_samples_leaf=1, n_jobs=-1, class_weight="balanced_subsample", random_state=random_state))])
-
-    if 'gb' in models_to_test:
-        models["gb"] = ImbPipeline(base_steps + [("clf", GradientBoostingClassifier(random_state=random_state))])
-
-    if 'xgb' in models_to_test:
-        models["xgb"] = ImbPipeline(base_steps + [("clf", XGBClassifier(n_estimators=400, max_depth=6, learning_rate=0.05, subsample=0.8, colsample_bytree=0.9, random_state=random_state, eval_metric="logloss"))])
-
-    return models
-
-
-
-
-def get_multiclass_estimators(preprocessor, random_state: int = 42, use_smote: bool = True) -> Dict[str, object]:
-    base_steps = [("prep", preprocessor)]
-    if use_smote:
-        base_steps.append(("smote", SMOTE(random_state=random_state)))
-
-
-    models: Dict[str, object] = {
-    "logreg": ImbPipeline(base_steps + [("clf", LogisticRegression(max_iter=2000, class_weight="balanced", random_state=random_state, multi_class="multinomial"))]),
-    "rf": ImbPipeline(base_steps + [("clf", RandomForestClassifier(n_estimators=400, max_depth=None, min_samples_split=2, min_samples_leaf=1, n_jobs=-1, class_weight="balanced_subsample", random_state=random_state))]),
-    "gb": ImbPipeline(base_steps + [("clf", GradientBoostingClassifier(random_state=random_state))]),
+    # Registry of all available binary models (not filtered yet)
+    registry = {
+        "logreg": LogisticRegression(
+            max_iter=2000, class_weight="balanced", random_state=random_state
+        ),
+        "rf": RandomForestClassifier(
+            n_estimators=400,
+            class_weight="balanced_subsample",
+            n_jobs=-1,
+            random_state=random_state,
+        ),
+        "gb": GradientBoostingClassifier(random_state=random_state),
     }
+
+    # Add XGB if installed
     if XGBClassifier is not None:
-        models["xgb"] = ImbPipeline(base_steps + [("clf", XGBClassifier(n_estimators=400, max_depth=6, learning_rate=0.05, subsample=0.8, colsample_bytree=0.9, random_state=random_state, eval_metric="mlogloss"))])
-    return models
+        registry["xgb"] = XGBClassifier(
+            n_estimators=400,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.9,
+            random_state=random_state,
+            eval_metric="logloss",
+        )
+
+    # Build only the pipelines requested in models_to_test
+    return {
+        name: _make_pipeline(preprocessor, clf, random_state, use_smote)
+        for name, clf in registry.items()
+        if name in models_to_test
+    }
+
+
+# -------------------------------------------------------------------------
+# MULTICLASS CLASSIFIERS
+# -------------------------------------------------------------------------
+def get_multiclass_estimators(
+    preprocessor,
+    random_state: int = 42,
+    use_smote: bool = True,
+    models_to_test={"logreg", "rf", "gb", "xgb"},
+) -> Dict[str, object]:
+    """
+    Returns a dictionary of multiclass classifiers wrapped inside pipelines.
+    """
+
+    registry = {
+        "logreg": LogisticRegression(
+            max_iter=2000,
+            class_weight="balanced",
+            random_state=random_state,
+            multi_class="multinomial",
+        ),
+        "rf": RandomForestClassifier(
+            n_estimators=400,
+            class_weight="balanced_subsample",
+            n_jobs=-1,
+            random_state=random_state,
+        ),
+        "gb": GradientBoostingClassifier(random_state=random_state),
+    }
+
+    if XGBClassifier is not None:
+        registry["xgb"] = XGBClassifier(
+            n_estimators=400,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.9,
+            random_state=random_state,
+            eval_metric="mlogloss",
+        )
+
+    return {
+        name: _make_pipeline(preprocessor, clf, random_state, use_smote)
+        for name, clf in registry.items()
+        if name in models_to_test
+    }
