@@ -51,9 +51,9 @@ def InitializePQC(circuit):
     # Torch module wrapper for batching
     # ------------------------------------------------
     class QuantumFeatureEmbedding(nn.Module):
-        def __init__(self, device="cuda"):
+        def __init__(self):
             super().__init__()
-            self.device = device
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             
             # Trainable PQC parameters
             self.phi = nn.Parameter(
