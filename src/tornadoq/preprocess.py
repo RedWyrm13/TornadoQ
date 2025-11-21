@@ -12,11 +12,6 @@ from .config import DROP_COLS, PreprocessConfig
 
 logger = logging.getLogger(__name__)
 
-# wrapper for pandas.load_csv
-def load_csv(filename):
-    df = pd.read_csv(filename)
-    return df
-
 
 def split_xy(df_train: pd.DataFrame, df_test: pd.DataFrame, target: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Split features and target; drop known target columns from X.
@@ -29,12 +24,8 @@ def split_xy(df_train: pd.DataFrame, df_test: pd.DataFrame, target: str) -> tupl
     return X_tr, X_te, y_tr, y_te
 
 
-
-
 def _num_cols(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
-
-
 
 
 def build_preprocessor(df: pd.DataFrame, cfg: PreprocessConfig) -> ColumnTransformer:
