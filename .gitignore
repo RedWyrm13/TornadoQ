@@ -2,3 +2,4 @@
 *.egg*
 *-checkpoint.*
 *venv*
+latex/
