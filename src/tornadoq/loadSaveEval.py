@@ -43,7 +43,16 @@ def load(model, load_path):
     
 
 
-def eval_model(model, test_loader, classifier="binary"):
+def eval_model(model, test_loader, classifier="binary", fontsize=12):
+    # NEW: global font scaling
+    plt.rcParams.update({
+        "font.size": fontsize,
+        "axes.titlesize": fontsize + 2,
+        "axes.labelsize": fontsize + 1,
+        "xtick.labelsize": fontsize,
+        "ytick.labelsize": fontsize,
+        "legend.fontsize": fontsize,
+    })
     model.eval()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -160,7 +169,7 @@ def eval_model(model, test_loader, classifier="binary"):
     plt.plot([0,1], [0,1], linestyle='--', color='gray')
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve")
+    plt.title(f"{classifier.capitalize()} ROC Curve")
     plt.legend()
     plt.show()
 
