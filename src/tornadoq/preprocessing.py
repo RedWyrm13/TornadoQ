@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 
 # Dataset reading
-def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows = False):
+def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows = False, output_filename = None):
     
     # Load training data
     df_train = pd.read_excel(TRAIN_FILE)
@@ -20,7 +20,7 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows = False):
     # Feature engineering with random shadows if this flag is true
     if withShadows:
         for df in (df_train, df_test, df_val):
-            shadow_df = generate_shadows(df)
+            shadow_df = generate_shadows(df, filename_save=output_filename)
             df = extend_features(shadow_df, df)
     
     print(f"✓ Training data loaded: {df_train.shape[0]} rows, {df_train.shape[1]} columns")
