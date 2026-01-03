@@ -1,106 +1,195 @@
-
 # TornadoQ
-*This work is being actively developed, and is not ready for industry use*
+*This work is actively under development and is **not** intended for industry or operational use.*
 
-This repository deploys a tool to help government officals and other appropriate authorities classify tornadoes on the EF scale so as to improve the quality of decisions made in response to these emergencies.
+TornadoQ is a research-focused toolkit for building and organizing tornado–environment datasets intended to support machine learning models that classify tornadoes on the Enhanced Fujita (EF) scale. The goal is to improve post-event classification and analysis to support government officials and other appropriate authorities in making better-informed decisions during and after severe weather events.
 
-## Setting up TornadoQ
-This project was set up with Python 3.10.14. Certain necessary dependencies may not be compatible with newer versions of Python.
+---
 
-1. Create a virtural environment
-   To initialize the enviroment on Linux, MacOS, or Windows open a terminal window and run
-   ```
-   python -m venv .venv
-   ```
-   Note for certain distributions of linux and MacOS, replace ```python``` with ```python3```.
+## Repository Setup
 
-   For the appropriate OS, the enviroment is activated as follows:
-   ### Windows (command prompt)
-   ```
-   .venv\Scripts\activate
-   ```
+This project was developed using **Python 3.10.14**.  
+Some dependencies may not be compatible with newer Python versions.
 
-   ### Windows (Powershell)
-   ```
-   .venv\Scripts\Activate.ps1
+### 1. Create a Virtual Environment
 
-   ```
+From the repository root, create a virtual environment:
 
-   ### MacOS
-   ```
-   source .venv/bin/activate
-
-   ```
-
-   ### Linux
-   ```
-   source .venv/bin/activate
-
-   ```
-2. Install the repository as a python package
-
+```bash
+python -m venv .venv
 ```
+
+> On some Linux and macOS systems, replace `python` with `python3`.
+
+Activate the environment for your operating system:
+
+#### Windows (Command Prompt)
+```bash
+.venv\Scripts\activate
+```
+
+#### Windows (PowerShell)
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+#### macOS
+```bash
+source .venv/bin/activate
+```
+
+#### Linux
+```bash
+source .venv/bin/activate
+```
+
+---
+
+### 2. Install Dependencies
+
+Install the repository in editable mode and install required packages:
+
+```bash
 pip install -e .
 pip install -r requirements.txt
 ```
 
-# Tornado Environment Dataset Builder (NOAA Storm Events + ERA5)
+---
 
-The build_dataset.py script located in TornadoQ/Data/NOAA/_generate_data/ recreates the tornado-environment dataset used in this project.
-*Note: The StormEvents*.csv files are required for this script to work. They were obtained from this link: https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/*
+## `build_dataset.py`  
+### Tornado Environment Dataset Builder (NOAA Storm Events + ERA5)
 
-It:
-- Reads **NOAA Storm Events** CSV rows (tornado events + labels / metadata)
-- Downloads matching **ERA5 environmental variables** (via the Copernicus Climate Data Store / CDS API)
-- Extracts features at each tornado’s **begin time (rounded to nearest hour) and location**
-- Outputs **one row per tornado event** with environmental features + `ef_category` / `ef_binary`
+**Location:**  
+```
+TornadoQ/Data/NOAA/_generate_data/build_dataset.py
+```
 
-## What you get (outputs)
+This script recreates the tornado–environment dataset used throughout the project.
 
-For each input NOAA CSV, the script writes a dataset CSV like:
+> **Important:**  
+> The script requires NOAA Storm Events CSV files, already included. (`StormEvents*.csv`).  
+> These files were obtained from:
+> https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/
+
+### What the Script Does
+
+- Reads **NOAA Storm Events** CSV files and filters for tornado events
+- Parses EF/F-scale labels and converts them into:
+  - `ef_category` (0–5)
+  - `ef_binary` (EF/F ≥ 2)
+- Downloads corresponding **ERA5 environmental data** via the Copernicus Climate Data Store (CDS)
+- Samples environmental variables at each tornado’s:
+  - Begin time (rounded to the nearest hour)
+  - Geographic location
+- Outputs **one row per tornado event** with environmental features and labels
+
+### ERA5 Variables Used
+
+**Single-level variables**
+- CAPE (`cape`)
+- CIN (`cin`)
+- 2 m temperature (`temp_2m`)
+- 2 m dewpoint (`dewpoint_2m`)
+- Surface pressure (`surface_pressure`)
+- Total column water vapor (`tcwv`)
+- 10 m winds (`u10`, `v10` — used internally)
+
+**Pressure-level derived variables**
+- 0–1 km wind shear (`shear_0_1km`)
+- 0–3 km wind shear (`shear_0_3km`)
+
+### Outputs
+
+For each input NOAA CSV file, the script produces:
 
 - `tornado_env_dataset0.csv`
 - `tornado_env_dataset1.csv`
-- ...
+- …
 
-Each output row contains:
+Each row contains:
 
 **Event metadata**
 - `event_id`
 - `begin_time_utc`
 - `begin_lat`, `begin_lon`
-- `cz_timezone`, `begin_date_time_raw`, `tor_f_scale_raw`
+- `cz_timezone`
+- `begin_date_time_raw`
+- `tor_f_scale_raw`
 
 **Labels**
-- `ef_category` (0–5 if parseable)
-- `ef_binary` (1 if EF/F >= 2 else 0)
+- `ef_category`
+- `ef_binary`
 
-**ERA5 single-level features**
-- `cape`, `cin`
-- `temp_2m`, `dewpoint_2m`
-- `surface_pressure`
-- `tcwv`
-- `u10`, `v10` *(used internally; not currently written as columns unless you add them)*
+**Environmental features**
+- ERA5 single-level and pressure-level variables listed above
 
-**ERA5 pressure-level derived features**
-- `shear_0_1km`
-- `shear_0_3km`
+### ERA5 Cache
 
-It also creates/uses a cache folder:
-- `era5_cache/` containing downloaded NetCDF files (`.nc`)
+Downloaded ERA5 NetCDF files are cached in:
+
+```
+era5_cache/
+```
+
+This prevents repeated downloads and ensures reproducibility across runs.
 
 ---
 
-After running build_dataset.py to generate the different tornado_env files, the parse_data.py script located in the same directory parse the generated data to create the "tornado_data_for_model_training.csv" file located one directory higher.
-This utility script takes the **per-file tornado environment datasets** produced by the ERA5/NOAA builder (e.g. `tornado_env_dataset0.csv`, `tornado_env_dataset1.csv`, …), concatenates them, removes non-training metadata columns, and writes a single **model-training-ready** CSV.
+## `parse_data.py`  
+### Dataset Aggregation and Training-Ready Formatting
 
-## What it does
+**Location:**  
+```
+TornadoQ/Data/NOAA/_generate_data/parse_data.py
+```
 
-1. Finds input files matching a glob pattern (default: `*dataset*.csv`)
-2. Reads and concatenates them into one DataFrame
-3. Drops metadata columns (IDs, timestamps, raw strings, lat/lon, etc.)
-4. Reorders feature + label columns into a consistent order
-5. Writes `tornado_data_for_model_training.csv`
+After running `build_dataset.py`, multiple per-file datasets (`tornado_env_dataset*.csv`) will exist in the directory.  
+This script aggregates and formats them into a **single training-ready dataset**.
 
-It also adds a `source_file` column during concatenation (useful for debugging / provenance).  
-If you don’t want that, delete the line that adds it in the script.
+### What the Script Does
+
+1. Finds all CSV files matching `*dataset*.csv`
+2. Concatenates them into a single DataFrame
+3. Drops non-training metadata columns:
+   - Event IDs
+   - Raw timestamps
+   - Lat/lon
+   - Timezone and raw string fields
+4. Reorders columns into a consistent feature + label layout
+5. Writes a final dataset:
+
+```
+tornado_data_for_model_training.csv
+```
+
+The output file is written **one directory level above** the script location.
+
+### Final Training Dataset Columns
+
+The default column order is:
+
+- `cape`
+- `cin`
+- `dewpoint_2m`
+- `temp_2m`
+- `tcwv`
+- `surface_pressure`
+- `shear_0_1km`
+- `shear_0_3km`
+- `ef_category`
+- `ef_binary`
+
+This format is intended to be directly ingestible by downstream machine learning models.
+
+---
+
+## Development Status
+
+This repository is under active development.  
+APIs, data formats, and modeling workflows may change as research progresses.
+
+---
+
+## License & Usage
+
+This project is intended for **research and educational purposes only**.  
+It is not certified for operational forecasting or emergency response use.
