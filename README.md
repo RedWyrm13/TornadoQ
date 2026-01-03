@@ -66,7 +66,7 @@ TornadoQ/Data/NOAA/_generate_data/build_dataset.py
 This script recreates the tornado–environment dataset used throughout the project.
 
 > **Important:**  
-> The script requires NOAA Storm Events CSV files, already included. (`StormEvents*.csv`).  
+> The script requires NOAA Storm Events Details CSV files, already included. (`StormEvents_details*.csv`).  
 > These files were obtained from:
 > https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/
 
