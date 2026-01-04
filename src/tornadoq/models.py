@@ -1,6 +1,5 @@
 from tornadoq.pqc import InitializePQC
 import torch.nn as nn
-import torch
 
 def InitializeModel(model, load_path = None, classifier = "binary", input_size = 8):
 
