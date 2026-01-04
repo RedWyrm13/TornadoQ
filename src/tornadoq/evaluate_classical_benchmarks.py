@@ -60,10 +60,6 @@ def fit_and_eval_binary(pipe, X_train, y_train, X_test, y_test) -> dict:
 
 
 
-def fit_and_eval_multiclass(pipe, X_train, y_train, X_test, y_test) -> dict:
-    pipe.fit(X_train, y_train)
-    y_pred = pipe.predict(X_test)
-    return {
-    "test_accuracy": accuracy_score(y_test, y_pred),
-    "report": classification_report(y_test, y_pred, target_names=[f"EF-{i}" for i in range(len(np.unique(y_test)))])
-    }
+def fit_and_eval_binary_many(models: dict, X_train, y_train, X_test, y_test) -> dict:
+    return {name: fit_and_eval_binary(pipe, X_train, y_train, X_test, y_test)
+            for name, pipe in models.items()}
