@@ -1,4 +1,3 @@
-from typing import List
 from tornadoq.shadows import generate_shadows, extend_features
 from torch.utils.data import Dataset
 from sklearn.impute import SimpleImputer
@@ -6,27 +5,38 @@ from sklearn.preprocessing import MinMaxScaler
 from imblearn.over_sampling import SMOTE
 import pandas as pd
 import torch
+from pathlib import Path
+
+
+def _read_table(path: str) -> pd.DataFrame:
+    ext = Path(path).suffix.lower()
+    if ext in {".xlsx", ".xls"}:
+        return pd.read_excel(path)
+    elif ext == ".csv":
+        return pd.read_csv(path)
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
 
 # Dataset reading
-def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows = False, output_filename = None):
+def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
     
-    # Load training data
-    df_train = pd.read_excel(TRAIN_FILE)
-    # Load test data
-    df_test = pd.read_excel(TEST_FILE)
-    # Load validation data
-    df_val = pd.read_excel(VALIDATION_FILE)
+    # Load data (csv or excel)
+    df_train = _read_table(TRAIN_FILE)
+    df_test  = _read_table(TEST_FILE)
+    df_val   = _read_table(VALIDATION_FILE)
 
-    # Feature engineering with random shadows if this flag is true
+    # Feature engineering with random shadows
     if withShadows:
-        for df in (df_train, df_test, df_val):
+        for name, df in [("train", df_train), ("test", df_test), ("val", df_val)]:
             shadow_df = generate_shadows(df, filename_save=output_filename)
-            df = extend_features(shadow_df, df)
-    
+            df[name] = extend_features(shadow_df, df)  # see note below
+
     print(f"✓ Training data loaded: {df_train.shape[0]} rows, {df_train.shape[1]} columns")
+    print(f"✓ Validation data loaded: {df_val.shape[0]} rows, {df_val.shape[1]} columns")
     print(f"✓ Test data loaded: {df_test.shape[0]} rows, {df_test.shape[1]} columns")
 
     return df_train, df_test, df_val
+
     
 # Dataset Preprocessing
 class ClassificationDataset(Dataset):
