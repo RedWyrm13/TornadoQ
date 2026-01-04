@@ -2,7 +2,7 @@ from tornadoq.pqc import InitializePQC
 import torch.nn as nn
 import torch
 
-def InitializeModel(model, input_size, load_path = None, classifier = "binary"):
+def InitializeModel(model, load_path = None, classifier = "binary", input_size = 8):
 
     ############ Conditionals for all model types ############## 
     ### DNN Various Input ###
