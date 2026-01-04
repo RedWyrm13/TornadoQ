@@ -221,6 +221,7 @@ def build_feature_matrix_from_circuits(
         X[k, :] = [feats[P] for P in pauli_list]
     return X
 
+# This can be removed since we handle normalization in the preprocess from preprocessing.py
 def normalize_new_features(unnormalized_features):
     from sklearn.preprocessing import MinMaxScaler
 
