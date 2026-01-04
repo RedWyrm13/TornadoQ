@@ -17,19 +17,19 @@ def _read_table(path: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
-# Dataset reading
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
-    
-    # Load data (csv or excel)
     df_train = _read_table(TRAIN_FILE)
     df_test  = _read_table(TEST_FILE)
     df_val   = _read_table(VALIDATION_FILE)
 
-    # Feature engineering with random shadows
     if withShadows:
-        for name, df in [("train", df_train), ("test", df_test), ("val", df_val)]:
+        def apply_shadows(df):
             shadow_df = generate_shadows(df, filename_save=output_filename)
-            df[name] = extend_features(shadow_df, df)  # see note below
+            return extend_features(shadow_df, df)
+
+        df_train = apply_shadows(df_train)
+        df_test  = apply_shadows(df_test)
+        df_val   = apply_shadows(df_val)
 
     print(f"✓ Training data loaded: {df_train.shape[0]} rows, {df_train.shape[1]} columns")
     print(f"✓ Validation data loaded: {df_val.shape[0]} rows, {df_val.shape[1]} columns")
