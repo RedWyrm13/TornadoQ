@@ -239,7 +239,7 @@ def generate_shadows(df,
                      encoding_axis = ("rx","ry"), 
                      train_test_val = None, 
                      filename_save = None,
-                     save=True):
+                     save=False):
 
     """
     df: pandas dataframe containg relevant data
@@ -266,7 +266,7 @@ def generate_shadows(df,
 
     # Adds the pauli rings as observables for each qubit pair
     for ring in ring_paulis:
-        ring.upper()
+        ring = ring.upper()
         paulis += paulis_ring_pairs(n, (ring[0], ring[1]))
 
     # Sets some parameters for shadow measurements
@@ -284,8 +284,10 @@ def generate_shadows(df,
     if filename_save:
         df.to_csv(filename_save, index = False)
     elif save and not filename_save:
-        filename_save = f"../Data/shadows/{normalized_features.shape[1]}_features{ring_paulis[0]}{ring_paulis[1]}_{train_test_val}_QuantumLayers{num_layers}.csv"
-        df.to_csv(filename_save, index = False)
+        rings_str = "_".join(ring_paulis)  # works for 0,1,2,... rings
+        filename_save = f"../Data/shadows/{normalized_features.shape[1]}_features_{rings_str}_{train_test_val}_QuantumLayers{num_layers}.csv"
+        df.to_csv(filename_save, index=False)
+
     return df
 
 # Meant to combine the original features with the shadow features
