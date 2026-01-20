@@ -17,6 +17,8 @@ def _read_table(path: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
+import pandas as pd
+
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
     df_train = _read_table(TRAIN_FILE)
     df_test  = _read_table(TEST_FILE)
@@ -24,18 +26,25 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
 
     if withShadows:
         def apply_shadows(df):
-            shadow_df = generate_shadows(df, filename_save=output_filename)
+            shadow_df = generate_shadows(df)
             return extend_features(shadow_df, df)
 
         df_train = apply_shadows(df_train)
         df_test  = apply_shadows(df_test)
         df_val   = apply_shadows(df_val)
 
-    print(f"✓ Training data loaded: {df_train.shape[0]} rows, {df_train.shape[1]} columns")
-    print(f"✓ Validation data loaded: {df_val.shape[0]} rows, {df_val.shape[1]} columns")
-    print(f"✓ Test data loaded: {df_test.shape[0]} rows, {df_test.shape[1]} columns")
+    df_train["split"] = "train"
+    df_val["split"]   = "validation"
+    df_test["split"]  = "test"
+
+    if output_filename:
+        combined_df = pd.concat([df_train, df_val, df_test], ignore_index=True)
+        combined_df.to_csv(output_filename, index=False)
+
+    print(f"✓ Combined data saved: {combined_df.shape[0]} rows, {combined_df.shape[1]} columns")
 
     return df_train, df_test, df_val
+
 
     
 # Dataset Preprocessing
