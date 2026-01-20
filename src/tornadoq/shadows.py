@@ -238,7 +238,8 @@ def generate_shadows(df,
                      num_layers = 1, 
                      encoding_axis = ("rx","ry"), 
                      train_test_val = None, 
-                     filename_save = None):
+                     filename_save = None,
+                     save=True):
 
     """
     df: pandas dataframe containg relevant data
@@ -282,7 +283,7 @@ def generate_shadows(df,
 
     if filename_save:
         df.to_csv(filename_save, index = False)
-    else:
+    elif save and not filename_save:
         filename_save = f"../Data/shadows/{normalized_features.shape[1]}_features{ring_paulis[0]}{ring_paulis[1]}_{train_test_val}_QuantumLayers{num_layers}.csv"
         df.to_csv(filename_save, index = False)
     return df
