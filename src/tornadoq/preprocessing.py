@@ -24,23 +24,23 @@ def _read_table_debug(path: str) -> pd.DataFrame:
     ext = Path(path).suffix.lower()
 
     if ext in {".xlsx", ".xls"}:
-        df = pd.read_excel(path, nrows=1)
+        df = pd.read_excel(path, nrows=10)
     elif ext == ".csv":
-        df = pd.read_csv(path, nrows=1)
+        df = pd.read_csv(path, nrows=10)
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
     print(f"\nDEBUG READ: {path}")
     print("Columns:", df.columns.tolist())
     print("First row values:")
-    print(df.iloc[0].to_dict())
+    print("Dict", df.iloc[0].to_dict())
 
     return df
 
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
-    df_train = _read_table_debug(TRAIN_FILE) # Replace with non debug version 
-    df_test  = _read_table_debug(TEST_FILE) # Replace with non debug version
-    df_val   = _read_table_debug(VALIDATION_FILE) # Replace with non debug version
+    df_train = _read_table(TRAIN_FILE) 
+    df_test  = _read_table(TEST_FILE)
+    df_val   = _read_table(VALIDATION_FILE)
 
     if withShadows:
         def apply_shadows(df):
@@ -51,9 +51,9 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
         df_test  = apply_shadows(df_test)
         df_val   = apply_shadows(df_val)
 
-    df_train["split"] = "train"
-    df_val["split"]   = "validation"
-    df_test["split"]  = "test"
+    # df_train["split"] = "train"
+    # df_val["split"]   = "validation"
+    # df_test["split"]  = "test"
 
     if output_filename:
         combined_df = pd.concat([df_train, df_val, df_test], ignore_index=True)

@@ -251,8 +251,9 @@ def generate_shadows(df,
     filename_save: specify the name and path to save the new features to. Othwewise, it gets saved to the default location in Quantathon2025/Data. This name must be csv
     """
 
-    # Converts to numpy array
-    data = df.to_numpy()
+    LABEL_COLS = ["ef_binary", "ef_class"] 
+    df_features = df.drop(columns=[c for c in LABEL_COLS if c in df.columns]) 
+    data = df_features.to_numpy() 
     
     # Gets size of feature space. We will use 1 qubit per feature
     n = len(data[0])
