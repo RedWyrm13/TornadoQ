@@ -63,7 +63,7 @@ def train(model, n_epochs, lr, train_loader, val_loader, classifier):
         model.eval()
         val_loss, val_metric = 0.0, 0.0
         with torch.no_grad():
-            for features, target in train_loader:
+            for features, target in val_loader:
                 if classifier == "binary":
                     features, target = features.to(device), target.unsqueeze(-1).to(device)
                 if classifier == "multiclass":
