@@ -6,15 +6,16 @@ import torch
 
 def accuracy(outputs, targets):
 
-    if outputs.size(0) > 1:
-        preds = torch.argmax(outputs, dim=1)   # [batch]
-        correct = (preds == targets).sum().float()
-        return correct / targets.size(0)
+    if outputs.ndim == 1 or outputs.shape[1] == 1:
+        preds = (outputs.view(-1) > 0.5).float()
+        targets = targets.view(-1)
+        return (preds == targets).float().mean()
 
     else:
-        preds = (outputs > 0.5).float()
-        correct = (preds == targets).float().sum()
-        return correct / targets.numel()
+        preds = torch.argmax(outputs, dim=1)
+        return (preds == targets).float().mean()
+
+
 
 def plot_metrics(g_losses, d_losses):
     epochs = range(1, len(g_losses) + 1)
