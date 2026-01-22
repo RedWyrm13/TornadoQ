@@ -69,8 +69,13 @@ def eval_model(model, test_loader, classifier="binary", fontsize=12):
             #                      BINARY CASE
             # ============================================================
             if classifier == "binary":
-                logits = outputs.squeeze(-1)               # (batch,)
-                probs = torch.sigmoid(logits)             # (batch,)
+                logits = outputs.squeeze(-1)
+
+                if logits.min() < 0 or logits.max() > 1:
+                    probs = torch.sigmoid(logits)
+                else:
+                    probs = logits
+
                 preds = (probs > 0.5).long()
 
             # ============================================================
