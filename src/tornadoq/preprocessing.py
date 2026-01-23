@@ -38,9 +38,9 @@ def _read_table_debug(path: str) -> pd.DataFrame:
     return df
 
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
-    df_train = _read_table(TRAIN_FILE) 
-    df_test  = _read_table(TEST_FILE)
-    df_val   = _read_table(VALIDATION_FILE)
+    df_train = _read_table_debug(TRAIN_FILE) 
+    df_test  = _read_table_debug(TEST_FILE)
+    df_val   = _read_table_debug(VALIDATION_FILE)
 
     if withShadows:
         def apply_shadows(df):

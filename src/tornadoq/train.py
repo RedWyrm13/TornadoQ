@@ -48,7 +48,7 @@ def train(model, n_epochs, lr, train_loader, val_loader, classifier):
             
             optimizer.zero_grad()
             outputs = model(features)
-
+            print(outputs.shape)
             loss = loss_fn(outputs, target)
             loss.backward()
             optimizer.step()

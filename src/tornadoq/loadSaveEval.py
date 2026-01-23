@@ -121,11 +121,14 @@ def eval_model(model, test_loader, classifier="binary", fontsize=12):
     # ============================================================
     else:
         num_classes = all_probs.shape[1]
-        cm = confusion_matrix(all_targets, all_preds)
+        labels = np.arange(num_classes)
+
+        cm = confusion_matrix(all_targets, all_preds, labels=labels)
 
         # AUC: One-vs-Rest multi-class
-        targets_1hot = label_binarize(all_targets, classes=np.arange(num_classes))
+        targets_1hot = label_binarize(all_targets, classes=labels)
         auc_score = roc_auc_score(targets_1hot, all_probs, multi_class='ovr')
+
 
         f1 = f1_score(all_targets, all_preds, average="macro")
         acc = accuracy_score(all_targets, all_preds)
@@ -137,7 +140,7 @@ def eval_model(model, test_loader, classifier="binary", fontsize=12):
             fn = cm[i, :].sum() - tp
             fp = cm[:, i].sum() - tp
             denom = tp + fn + fp
-            csi.append(tp / denom if denom > 0 else 0)
+            csi.append(tp / denom if denom > 0 else 0.0)
 
         print(f"Multiclass AUC: {auc_score:.4f}, Macro F1: {f1:.4f}, Accuracy: {acc:.4f}")
         for i in range(num_classes):
