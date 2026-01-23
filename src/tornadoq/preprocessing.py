@@ -17,9 +17,6 @@ def _read_table(path: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
-from pathlib import Path
-import pandas as pd
-
 def _read_table_debug(path: str) -> pd.DataFrame:
     ext = Path(path).suffix.lower()
 
@@ -38,9 +35,9 @@ def _read_table_debug(path: str) -> pd.DataFrame:
     return df
 
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None):
-    df_train = _read_table_debug(TRAIN_FILE) 
-    df_test  = _read_table_debug(TEST_FILE)
-    df_val   = _read_table_debug(VALIDATION_FILE)
+    df_train = _read_table(TRAIN_FILE) 
+    df_test  = _read_table(TEST_FILE)
+    df_val   = _read_table(VALIDATION_FILE)
 
     if withShadows:
         def apply_shadows(df):
