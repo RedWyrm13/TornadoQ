@@ -105,8 +105,10 @@ def Preprocess(df_train, df_test, df_val, balance=None, classes='binary'):
 
     if classes == 'binary':
         y_train, y_test, y_val = y_train_binary, y_test_binary, y_val_binary
-    else:
+    elif classes == 'multiclass':
         y_train, y_test, y_val = y_train_class, y_test_class, y_val_class
+    else:
+        raise ValueError(f"classes parameter must be either binary or multiclass. You have {classes}.")
 
     # Impute
     imputer = SimpleImputer(strategy='mean')
