@@ -55,8 +55,9 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
     if output_filename:
         combined_df = pd.concat([df_train, df_val, df_test], ignore_index=True)
         combined_df.to_csv(output_filename, index=False)
+        print(f"✓ Combined data saved: {combined_df.shape[0]} rows, {combined_df.shape[1]} columns")
 
-    print(f"✓ Combined data saved: {combined_df.shape[0]} rows, {combined_df.shape[1]} columns")
+
 
     return df_train, df_test, df_val
 
