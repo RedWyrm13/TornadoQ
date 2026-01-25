@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from pennylane.templates import RandomLayers, StronglyEntanglingLayers
+from tornadoq.helper import resolve_device
 
 # ---------------------------------------------------
 # Feature embedding circuits
@@ -22,7 +23,7 @@ def SE_feature_embedding(f, phi, n_qubits):
 # ---------------------------------------------------
 # Main initializer
 # ---------------------------------------------------
-def InitializePQC(circuit):
+def InitializePQC(circuit, device):
     n_qubits = 8
     n_layers = 1
     dev = qml.device("default.qubit", wires=n_qubits)
@@ -50,10 +51,10 @@ def InitializePQC(circuit):
     # ------------------------------------------------
     # Torch module wrapper for batching
     # ------------------------------------------------
-    class QuantumFeatureEmbedding(nn.Module):
+    class QuantumFeatureEmbedding(nn.Module, device):
         def __init__(self):
             super().__init__()
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.device = resolve_device(device)
             
             # Trainable PQC parameters
             self.phi = nn.Parameter(

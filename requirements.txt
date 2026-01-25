@@ -106,7 +106,7 @@ tomlkit==0.13.3
 toolz==1.1.0
 torch==2.9.1
 tornado==6.5.2
--e git+ssh://git@github.com/RedWyrm13/TornadoQ.git@b7f989ea7e8375fe646e46eb07d176ca3ef18742#egg=tornadoq
+-e git+ssh://git@github.com/RedWyrm13/TornadoQ.git@e2458e8fd4bec31806db7dd561c0d42df67be960#egg=tornadoq
 tqdm==4.67.1
 traitlets==5.14.3
 triton==3.5.1

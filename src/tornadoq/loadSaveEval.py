@@ -15,6 +15,7 @@ from sklearn.metrics import (
     accuracy_score,
 )
 from sklearn.preprocessing import label_binarize
+from tornadoq.helper import resolve_device
 
 def save(model, save_path=None):
     ## Save Model
@@ -54,9 +55,7 @@ def collect_outputs(model, loader, classifier="binary", device=None):
       all_probs:   (N,) for binary OR (N, C) for multiclass
     """
     model.eval()
-
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = resolve_device(device)
 
     all_targets, all_preds, all_probs = [], [], []
 
@@ -150,6 +149,9 @@ def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=1
 
 
 def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=None, fontsize=12, device=None):
+    
+    device = resolve_device(device)
+    
     # global font sizing (optional)
     plt.rcParams.update({
         "font.size": fontsize,

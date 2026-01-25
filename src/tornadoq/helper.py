@@ -2,6 +2,24 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
 
+# Helper function to check if device is proper type
+def resolve_device(device: str | None) -> torch.device:
+    if device is None:
+        raise ValueError("Device must be specified.")
+
+    try:
+        dev = torch.device(device)
+    except Exception as e:
+        raise ValueError(f"Invalid device string: {device}") from e
+
+    if dev.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA requested but not available.")
+
+    if dev.type == "mps" and not torch.backends.mps.is_available():
+        raise RuntimeError("MPS requested but not available.")
+
+    return dev
+
 # Helper functions for plotting, metrics, etc
 
 def accuracy(outputs, targets):

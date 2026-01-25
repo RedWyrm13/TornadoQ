@@ -2,12 +2,11 @@ import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import torch.nn as nn
-from tornadoq.helper import accuracy
+from tornadoq.helper import accuracy, resolve_device
 import os
+def train(model, n_epochs, lr, train_loader, val_loader, classifier, device = None):
 
-def train(model, n_epochs, lr, train_loader, val_loader, classifier):
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = resolve_device(device)
     model = model.to(device)
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999))
