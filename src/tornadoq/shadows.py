@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Sequence, Tuple, Dict, Optional
+from typing import List, Sequence, Tuple, Dict, Optional, Literal
 import numpy as np
 import pandas as pd
 from qiskit import QuantumCircuit
@@ -122,6 +122,21 @@ def paulis_ring_pairs(n: int, axes: Tuple[str, str] = ("Z", "Z")) -> List[Pauli]
     return out
 
 
+def paulis_all_pairs(n: int, axes: Tuple[str, str] = ("Z", "Z")) -> List[Pauli]:
+    """
+    All unordered pairs i<j with a fixed axis-pair (e.g., ('X','Y') => XY on every pair).
+    Size: C(n,2)
+    """
+    a, b = axes
+    out: List[Pauli] = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            s = ["I"] * n
+            s[i], s[j] = a, b
+            out.append(tuple(s))
+    return out
+
+
 def paulis_all_weight2(n: int, axes: Sequence[str] = ("X", "Y", "Z")) -> List[Pauli]:
     """All unordered pairs i<j with all axis combinations from `axes`."""
     out: List[Pauli] = []
@@ -165,7 +180,6 @@ def estimate_pauli_expectations(
     """
     assert len(bases_list) == len(outcomes), "Mismatched bases and outcomes."
     T = len(bases_list)
-    n = len(bases_list[0]) if T > 0 else 0
 
     # Precompute supports / weights
     supports: List[List[int]] = []
@@ -232,67 +246,117 @@ def normalize_new_features(unnormalized_features):
     
 
 # I Need to change filesave_name to save no file when set to None. Currently, it saves to a default location
-def generate_shadows(df, 
-                     ring_paulis = ['XY'], 
-                     entanglement = 'ring', 
-                     num_layers = 1, 
-                     encoding_axis = ("rx","ry"), 
-                     train_test_val = None, 
-                     filename_save = None,
-                     save=False):
-
+def generate_shadows(
+    df,
+    ring_paulis: List[str] = ['XY'],
+    entanglement: str = 'ring',
+    num_layers: int = 1,
+    encoding_axis: Tuple[str, str] = ("rx", "ry"),
+    train_test_val: Optional[str] = None,
+    filename_save: Optional[str] = None,
+    save: bool = False,
+    pair_mode: Literal["ring", "all"] = "ring",
+    T: int = 200,
+    shots: int = 1000,
+    seed: int = 123,
+    # --- OPTIONAL: if True, use *all* 2-body combinations (XX..ZZ) instead of parsing ring_paulis ---
+    all_weight2: bool = False,
+):
     """
-    df: pandas dataframe containg relevant data
-    ring_paulis: Defines ring of specified observables. Takes an list of type list["PP'"] where P and P' are pauli observables (either I, X, Y or Z)
-    entanglement: Defines entanglement of the circuit. Pass 'full', 'ring', or 'linear'
-    num_layers: Number of ansatz layers. Layers involve data reuploading
-    encoding_axis: Encoding the data via x-rotations, y-rotations, z-rotations, or some combination
-    train_test_val: Adds the appropriate string to the of the file containing the new features
-    filename_save: specify the name and path to save the new features to. Othwewise, it gets saved to the default location in Quantathon2025/Data. This name must be csv
+    df: pandas dataframe containing relevant data
+
+    ring_paulis:
+        List like ["XY", "ZZ"]. Each entry specifies which 2-body Pauli axis-pair to include.
+
+    pair_mode:
+        "ring" => only neighbor pairs (i, i+1 mod n)
+        "all"  => all unordered pairs (i<j)
+
+    all_weight2:
+        If True, ignores ring_paulis and adds *all* 2-body Pauli strings (XX..ZZ) on the chosen pair_mode.
+        - For pair_mode="ring": n pairs * 9 features
+        - For pair_mode="all": C(n,2) pairs * 9 features
+
+    T/shots/seed:
+        Shadow sampling controls.
     """
 
-    LABEL_COLS = ["ef_binary", "ef_class"] 
-    df_features = df.drop(columns=[c for c in LABEL_COLS if c in df.columns]) 
-    data = df_features.to_numpy() 
-    
+    LABEL_COLS = ["ef_binary", "ef_class"]
+    df_features = df.drop(columns=[c for c in LABEL_COLS if c in df.columns])
+    data = df_features.to_numpy()
+
     # Gets size of feature space. We will use 1 qubit per feature
     n = len(data[0])
 
     # Builds a circuit for each datapoint
-    circuits = [build_circuit(x, encoding_axes=encoding_axis, entanglement=entanglement, gate="cx", num_layers=num_layers)
-                for x in data]
-    
-    # Adds the Pauli Operators for each qubit as observables.
-    paulis = paulis_singles_xyz(n)
+    circuits = [
+        build_circuit(
+            x,
+            encoding_axes=encoding_axis,
+            entanglement=entanglement,
+            gate="cx",
+            num_layers=num_layers,
+        )
+        for x in data
+    ]
 
-    # Adds the pauli rings as observables for each qubit pair
-    for ring in ring_paulis:
-        ring = ring.upper()
-        paulis += paulis_ring_pairs(n, (ring[0], ring[1]))
+    # Always include single-qubit Paulis
+    paulis: List[Pauli] = paulis_singles_xyz(n)
 
-    # Sets some parameters for shadow measurements
-    cfg = ShadowConfig(T = 200, shots = 1000, seed = 123)
+    # Add 2-body Paulis
+    if all_weight2:
+        if pair_mode == "all":
+            paulis += paulis_all_weight2(n, axes=("X", "Y", "Z"))
+        else:
+            # ring-only but all axis combos
+            # implement ring-weight2 by filtering all_weight2 to ring edges:
+            ring_edges = {(i, (i + 1) % n) for i in range(n)}
+            for i in range(n):
+                j = (i + 1) % n
+                for a in ("X", "Y", "Z"):
+                    for b in ("X", "Y", "Z"):
+                        s = ["I"] * n
+                        s[i], s[j] = a, b
+                        paulis.append(tuple(s))
+    else:
+        # Parse ring_paulis entries like "XY" and add either ring pairs or all pairs for that axis-pair
+        for pair in ring_paulis:
+            pair = pair.upper().strip()
+            if len(pair) != 2 or any(p not in {"I", "X", "Y", "Z"} for p in pair):
+                raise ValueError(f"Invalid Pauli pair '{pair}'. Expected like 'XY', 'ZZ', etc.")
+            axes = (pair[0], pair[1])
+            if pair_mode == "all":
+                paulis += paulis_all_pairs(n, axes)
+            else:
+                paulis += paulis_ring_pairs(n, axes)
 
-    # Generates the new features by collecting the shadows and estimating the expectation values
+    # Shadow measurement parameters
+    cfg = ShadowConfig(T=T, shots=shots, seed=seed)
+
+    # Generate features
     new_features = build_feature_matrix_from_circuits(circuits, paulis, cfg)
-    
-    # Normalizes the features
+
+    # Normalize (optional; you said preprocess can handle this)
     normalized_features = normalize_new_features(new_features)
 
-    # Save the data
-    df = pd.DataFrame(normalized_features)
+    # Build output df (keep column labels if you want)
+    out_df = pd.DataFrame(normalized_features, columns=[label_of(P) for P in paulis])
 
-    if filename_save:
-        df.to_csv(filename_save, index = False)
-    elif save and not filename_save:
-        rings_str = "_".join(ring_paulis)  # works for 0,1,2,... rings
-        filename_save = f"../Data/shadows/{normalized_features.shape[1]}_features_{rings_str}_{train_test_val}_QuantumLayers{num_layers}.csv"
-        df.to_csv(filename_save, index=False)
+    # Save logic: ONLY save if explicitly requested
+    if filename_save is not None:
+        out_df.to_csv(filename_save, index=False)
+    elif save:
+        rings_str = "ALLW2" if all_weight2 else "_".join(ring_paulis)
+        filename_save = (
+            f"../{normalized_features.shape[1]}_features_"
+            f"{rings_str}_{pair_mode}_{train_test_val}_QuantumLayers{num_layers}.csv"
+        )
+        out_df.to_csv(filename_save, index=False)
 
-    return df
+    return out_df
+
 
 # Meant to combine the original features with the shadow features
 def extend_features(df_1, df_2):
-    df = pd.concat([df_1,df_2], axis  = 1)
+    df = pd.concat([df_1, df_2], axis=1)
     return df
-

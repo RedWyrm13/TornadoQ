@@ -1,7 +1,7 @@
 from tornadoq.pqc import InitializePQC
 import torch.nn as nn
 
-def InitializeModel(model, load_path = None, classifier = "binary", input_size = 8):
+def InitializeModel(model, load_path = None, classifier = "binary", input_size = 8, device = None):
 
     ############ Conditionals for all model types ############## 
     ### DNN Various Input ###
@@ -16,7 +16,7 @@ def InitializeModel(model, load_path = None, classifier = "binary", input_size =
     elif model in ("RandomLayer", "StronglyEntangling"):
         
         #Initialize PQC
-        pqc = InitializePQC(model)
+        pqc = InitializePQC(model, device = device)
 
         #Initialize architecture here
         if classifier == "binary":

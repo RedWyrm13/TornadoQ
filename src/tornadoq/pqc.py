@@ -28,12 +28,9 @@ def InitializePQC(circuit, device):
     n_layers = 1
     dev = qml.device("default.qubit", wires=n_qubits)
 
-    # ---------------------------------------------
-    # Select PQC type
-    # ---------------------------------------------
     if circuit == "RandomLayer":
         phi_shape = (n_layers, n_qubits * 3)
-        
+
         @qml.qnode(dev, interface="torch", diff_method="backprop")
         def qnode(f, phi):
             return RL_feature_embedding(f, phi, n_qubits)
@@ -48,15 +45,12 @@ def InitializePQC(circuit, device):
     else:
         raise ValueError("circuit must be 'RandomLayer' or 'StronglyEntangling'")
 
-    # ------------------------------------------------
-    # Torch module wrapper for batching
-    # ------------------------------------------------
-    class QuantumFeatureEmbedding(nn.Module, device):
-        def __init__(self):
+    class QuantumFeatureEmbedding(nn.Module):
+        def __init__(self, device):
             super().__init__()
             self.device = resolve_device(device)
-            
-            # Trainable PQC parameters
+
+            # Keep PQC params on CPU (default.qubit is CPU)
             self.phi = nn.Parameter(
                 torch.tensor(
                     np.random.uniform(0, 2 * np.pi, phi_shape),
@@ -65,15 +59,12 @@ def InitializePQC(circuit, device):
             )
 
         def forward(self, x_batch):
-            """Compute PQC outputs for batch -> (B, 256)"""
             out = []
-            phi_cpu = self.phi.detach().cpu()
-
             for x in x_batch:
-                result = qnode(x.detach().cpu(), phi_cpu)
+                x_cpu = x.to("cpu")
+                # DO NOT detach phi if you want gradients
+                result = qnode(x_cpu, self.phi)
                 out.append(result.real.to(self.device))
-
             return torch.stack(out)
 
-    return QuantumFeatureEmbedding()
-
+    return QuantumFeatureEmbedding(device)
