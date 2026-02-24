@@ -34,11 +34,17 @@ def _read_table_debug(path: str) -> pd.DataFrame:
 
     return df
 
-def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None, shadow_options = None):
+def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None, shadow_options = None, debug = False):
     
-    df_train = _read_table(TRAIN_FILE) 
-    df_test  = _read_table(TEST_FILE)
-    df_val   = _read_table(VALIDATION_FILE)
+    if debug == True:
+            df_train = _read_table_debug(TRAIN_FILE) 
+            df_test  = _read_table_debug(TEST_FILE)
+            df_val   = _read_table_debug(VALIDATION_FILE)
+            
+    else:
+        df_train = _read_table(TRAIN_FILE) 
+        df_test  = _read_table(TEST_FILE)
+        df_val   = _read_table(VALIDATION_FILE)
 
     if withShadows:
         def apply_shadows(df):
@@ -49,9 +55,6 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
         df_test  = apply_shadows(df_test)
         df_val   = apply_shadows(df_val)
 
-    # df_train["split"] = "train"
-    # df_val["split"]   = "validation"
-    # df_test["split"]  = "test"
 
     if output_filename:
         combined_df = pd.concat([df_train, df_val, df_test], ignore_index=True)
