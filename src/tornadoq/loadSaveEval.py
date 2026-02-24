@@ -14,6 +14,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score,
 )
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import label_binarize
 from tornadoq.helper import resolve_device
 
@@ -149,7 +150,7 @@ def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=1
 
 
 def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=None, fontsize=12, device=None):
-    
+    safe_title = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in str(title))
     device = resolve_device(device)
     
     # global font sizing (optional)
@@ -175,9 +176,15 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
         csi = tp / (tp + fn + fp) if (tp + fn + fp) > 0 else 0.0
 
         print(f"[{title}] AUC={auc_score:.4f}  F1={f1:.4f}  Acc={acc:.4f}  CSI={csi:.4f}")
+        plt.figure()
         plot_confusion(cm, title=f"{title} — Confusion Matrix", class_names=["0", "1"], fontsize=fontsize)
+        plt.savefig(f"confusion_matrix_{safe_title}.png")
+        plt.close()
+        
         plot_roc_binary(y_true, y_prob, title=f"{title} — ROC", fontsize=fontsize)
-
+        plt.figure()
+        plt.savefig(f"roc_binary{safe_title}.png")
+        plt.close()
         return {"auc": auc_score, "f1": f1, "acc": acc, "csi": csi}
 
     else:
@@ -193,9 +200,14 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
         acc = accuracy_score(y_true, y_pred)
 
         print(f"[{title}] AUC(OVR)={auc_ovr:.4f}  MacroF1={f1:.4f}  Acc={acc:.4f}")
+        plt.figure()
         plot_confusion(cm, title=f"{title} — Confusion Matrix", class_names=class_names, fontsize=fontsize)
-        macro_auc, per_class_aucs = plot_roc_multiclass_ovr(
-            y_true, y_prob, title=f"{title} — ROC (OvR)", class_names=class_names, fontsize=fontsize
-        )
+        plt.savefig(f"confusion_matrix_{safe_title}.png", dpi=300, bbox_inches="tight")
+        plt.close()
+
+        plt.figure()
+        macro_auc, per_class_aucs = plot_roc_multiclass_ovr(...)
+        plt.savefig(f"roc_ovr_{safe_title}.png", dpi=300, bbox_inches="tight")
+        plt.close()
 
         return {"auc_ovr": auc_ovr, "macro_f1": f1, "acc": acc, "macro_auc_simple": macro_auc, "auc_per_class": per_class_aucs}
