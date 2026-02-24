@@ -6,6 +6,7 @@ from imblearn.over_sampling import SMOTE
 import pandas as pd
 import torch
 from pathlib import Path
+import time
 
 
 def _read_table(path: str) -> pd.DataFrame:
@@ -50,18 +51,21 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
         def apply_shadows(df):
             shadow_df = generate_shadows(df, **shadow_options)
             return extend_features(shadow_df, df)
-
+        start = time.time()
         df_train = apply_shadows(df_train)
         df_test  = apply_shadows(df_test)
         df_val   = apply_shadows(df_val)
+        end = time.time()
+        print(f"Duration of Shadow Generation: {(end-start):.2f}.")
+        
+        number_of_datapoints = len(df_test) + len(df_train)+len(df_val)
+        print(f"Duration of Shadow Generation per circuit: {((end-start)/number_of_datapoints):.2f}.")
 
-
+        
     if output_filename:
         combined_df = pd.concat([df_train, df_val, df_test], ignore_index=True)
         combined_df.to_csv(output_filename, index=False)
         print(f"✓ Combined data saved: {combined_df.shape[0]} rows, {combined_df.shape[1]} columns")
-
-
 
     return df_train, df_test, df_val
 
