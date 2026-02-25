@@ -38,9 +38,9 @@ def _read_table_debug(path: str) -> pd.DataFrame:
 def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None, shadow_options = None, debug = False):
     
     if debug == True:
-            df_train = _read_table_debug(TRAIN_FILE) 
-            df_test  = _read_table_debug(TEST_FILE)
-            df_val   = _read_table_debug(VALIDATION_FILE)
+        df_train = _read_table_debug(TRAIN_FILE) 
+        df_test  = _read_table_debug(TEST_FILE)
+        df_val   = _read_table_debug(VALIDATION_FILE)
             
     else:
         df_train = _read_table(TRAIN_FILE) 
