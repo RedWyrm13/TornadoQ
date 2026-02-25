@@ -86,7 +86,7 @@ def collect_outputs(model, loader, classifier="binary", device=None):
     return all_targets, all_preds, all_probs
 
 
-def plot_confusion(cm, title, class_names=None, fontsize=12):
+def plot_confusion(cm, title, class_names=None, fontsize=12, filename = None):
     plt.figure(figsize=(6, 5))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     disp.plot(values_format="d")
@@ -94,10 +94,14 @@ def plot_confusion(cm, title, class_names=None, fontsize=12):
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.tight_layout()
-    plt.show()
+    if filename:
+        plt.savefig(filename)
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_roc_binary(y_true, y_score, title, fontsize=12):
+def plot_roc_binary(y_true, y_score, title, fontsize=12, filename = None):
     fpr, tpr, _ = roc_curve(y_true, y_score)
     roc_auc = auc(fpr, tpr)
 
@@ -109,12 +113,15 @@ def plot_roc_binary(y_true, y_score, title, fontsize=12):
     plt.title(title)
     plt.legend()
     plt.tight_layout()
-    plt.show()
-
+    if filename:
+        plt.savefig(filename)
+        plt.close()
+    else:
+        plt.show()
     return roc_auc
 
 
-def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=12):
+def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=12, filename = None):
     """
     One-vs-Rest ROC curves + macro-average AUC.
     y_score: (N, C) probabilities
@@ -144,7 +151,11 @@ def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=1
     plt.title(f"{title} — macro AUC={macro_auc:.3f}")
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    if filename:
+        plt.savefig(filename)
+        plt.close()
+    else:
+        plt.show()
 
     return macro_auc, class_aucs
 
@@ -176,16 +187,20 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
         csi = tp / (tp + fn + fp) if (tp + fn + fp) > 0 else 0.0
 
         print(f"[{title}] AUC={auc_score:.4f}  F1={f1:.4f}  Acc={acc:.4f}  CSI={csi:.4f}")
-        plt.figure()
-        plot_confusion(cm, title=f"{title} — Confusion Matrix", class_names=["0", "1"], fontsize=fontsize)
-        plt.savefig(f"confusion_matrix_{safe_title}.png")
-        plt.close()
+        plot_confusion(cm, 
+                       title=f"{title} — Confusion Matrix", 
+                       class_names=["0", "1"], 
+                       fontsize=fontsize, 
+                       filename='./images/' + safe_title + "confusion_matrix.png")
         
-        plot_roc_binary(y_true, y_prob, title=f"{title} — ROC", fontsize=fontsize)
-        plt.figure()
-        plt.savefig(f"roc_binary{safe_title}.png")
-        plt.close()
-        return {"auc": auc_score, "f1": f1, "acc": acc, "csi": csi}
+        plot_roc_binary(y_true, 
+                        y_prob, 
+                        title=f"{title} — ROC", 
+                        fontsize=fontsize,
+                        filename='./images/' + safe_title + "roc.png")
+        return {"auc": auc_score, 
+                "f1": f1, "acc": acc, 
+                "csi": csi}
 
     else:
         num_classes = y_prob.shape[1]
@@ -200,14 +215,22 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
         acc = accuracy_score(y_true, y_pred)
 
         print(f"[{title}] AUC(OVR)={auc_ovr:.4f}  MacroF1={f1:.4f}  Acc={acc:.4f}")
-        plt.figure()
-        plot_confusion(cm, title=f"{title} — Confusion Matrix", class_names=class_names, fontsize=fontsize)
-        plt.savefig(f"confusion_matrix_{safe_title}.png", dpi=300, bbox_inches="tight")
-        plt.close()
+        plot_confusion(cm, 
+                       title=f"{title} — Confusion Matrix", 
+                       class_names=class_names, 
+                       fontsize=fontsize,
+                       filename = './images/' + safe_title + 'confusion_matrix.png')
 
-        plt.figure()
-        macro_auc, per_class_aucs = plot_roc_multiclass_ovr(...)
-        plt.savefig(f"roc_ovr_{safe_title}.png", dpi=300, bbox_inches="tight")
-        plt.close()
-
-        return {"auc_ovr": auc_ovr, "macro_f1": f1, "acc": acc, "macro_auc_simple": macro_auc, "auc_per_class": per_class_aucs}
+        macro_auc, per_class_aucs = plot_roc_multiclass_ovr(
+            y_true,
+            y_prob,
+            class_names=class_names,
+            title=f"{title} — ROC (OVR)",
+            fontsize=fontsize,
+            filename='./images/' + safe_title + "roc.png"
+        )
+        return {"auc_ovr": auc_ovr, 
+                "macro_f1": f1, 
+                "acc": acc, 
+                "macro_auc_simple": macro_auc, 
+                "auc_per_class": per_class_aucs}
