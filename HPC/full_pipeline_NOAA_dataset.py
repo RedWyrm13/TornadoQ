@@ -20,7 +20,7 @@ from tornadoq.models import InitializeModel
 from tornadoq.loadSaveEval import eval_and_plot
 import argparse
 
-
+print("IMPORTS FINISHED!")
 parser = argparse.ArgumentParser(description="Load dataset with partial percentage")
 parser.add_argument("--percent_data", type = str, required=True, help = "Percentage of data to use in experiment")
 args = parser.parse_args()
