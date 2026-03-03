@@ -74,9 +74,9 @@ def DataMaker(TRAIN_FILE,
         df_val   = _read_table_debug(VALIDATION_FILE, percent_data)
             
     else:
-        df_train = _read_table(TRAIN_FILE) 
-        df_test  = _read_table(TEST_FILE)
-        df_val   = _read_table(VALIDATION_FILE)
+        df_train = _read_table(TRAIN_FILE, percent_data) 
+        df_test  = _read_table(TEST_FILE, percent_data)
+        df_val   = _read_table(VALIDATION_FILE, percent_data)
 
     if withShadows:
         def apply_shadows(df):
