@@ -69,9 +69,9 @@ def DataMaker(TRAIN_FILE,
               percent_data = 1.0):
     
     if debug == True:
-        df_train = _read_table_debug(TRAIN_FILE, percent_data) 
-        df_test  = _read_table_debug(TEST_FILE, percent_data)
-        df_val   = _read_table_debug(VALIDATION_FILE, percent_data)
+        df_train = _read_table_debug(TRAIN_FILE) 
+        df_test  = _read_table_debug(TEST_FILE)
+        df_val   = _read_table_debug(VALIDATION_FILE)
             
     else:
         df_train = _read_table(TRAIN_FILE, percent_data) 

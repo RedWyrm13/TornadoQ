@@ -42,7 +42,7 @@ fontsize = 12
 
 # Create pandas dataframes
 # Without Shadows
-debug = True
+debug = False
 if debug:
     batch_size = 5
 
