@@ -18,8 +18,13 @@ from tornadoq.preprocessing import (
 from tornadoq.train import train
 from tornadoq.models import InitializeModel
 from tornadoq.loadSaveEval import eval_and_plot
+import argparse
 
 
+parser = argparse.ArgumentParser(description="Load dataset with partial percentage")
+parser.add_argument("--percent_data", type = str, required=True, help = "Percentage of data to use in experiment")
+args = parser.parse_args()
+percent_data = args.percent_data
 classifier = 'binary' # binary or multiclass
 
 # These can be in either .xlsx or .csv
@@ -131,8 +136,23 @@ lr = .01
 # Initialize, train, and evaluate model
 model = InitializeModel(model, load_path = None, classifier = classifier, input_size = num_features_ws)
 print(type(model))
-train(model = model, n_epochs = n_epochs, lr = lr, train_loader = train_loader_ws, val_loader = val_loader_ws, classifier = classifier, device = device)
-eval_and_plot(model, test_loader_ws, classifier=classifier, title="EVAL With Shadows", class_names=None, fontsize=fontsize, device=device)
+train(model = model, 
+      n_epochs = n_epochs, 
+      lr = lr, 
+      train_loader = train_loader_ws, 
+      val_loader = val_loader_ws, 
+      classifier = classifier, 
+      device = device,
+      percent_data=percent_data)
+
+eval_and_plot(model, 
+              test_loader_ws, 
+              classifier=classifier, 
+              title="EVAL With Shadows", 
+              class_names=None, 
+              fontsize=fontsize, 
+              device=device,
+              percent_data=percent_data)
 
 
 # Choose model and hyperparameters
@@ -144,8 +164,23 @@ lr = .01
 # Initialize, train, and evaluate model
 model = InitializeModel(model, load_path = None, classifier = classifier, input_size = num_features_ns)
 print(type(model))
-train(model = model, n_epochs = n_epochs, lr = lr, train_loader = train_loader_ns, val_loader = val_loader_ns, classifier = classifier, device = device)
-eval_and_plot(model, test_loader_ns, classifier=classifier, title="EVAL No Shadows", class_names=None, fontsize=fontsize, device=device)
+train(model = model, 
+      n_epochs = n_epochs, 
+      lr = lr,
+      train_loader = train_loader_ns, 
+      val_loader = val_loader_ns, 
+      classifier = classifier, 
+      device = device,
+      percent_data=percent_data)
+
+eval_and_plot(model, 
+              test_loader_ns, 
+              classifier=classifier, 
+              title="EVAL No Shadows", 
+              class_names=None, 
+              fontsize=fontsize, 
+              device=device,
+              percent_data = percent_data)
 
 
 
@@ -160,8 +195,23 @@ print(num_features_ns)
 # Initialize, train, and evaluate model
 model = InitializeModel(model, load_path = None, classifier = classifier, input_size = num_features_ns, device = device)
 print(type(model))
-train(model = model, n_epochs = n_epochs, lr = lr, train_loader = train_loader_ns, val_loader = val_loader_ns, classifier = classifier, device = device)
-eval_and_plot(model, test_loader_ns, classifier=classifier, title="EVAL", class_names=None, fontsize=fontsize, device=device)
+train(model = model, 
+      n_epochs = n_epochs, 
+      lr = lr, 
+      train_loader = train_loader_ns, 
+      val_loader = val_loader_ns, 
+      classifier = classifier, 
+      device = device,
+      percent_data=percent_data)
+
+eval_and_plot(model, 
+              test_loader_ns, 
+              classifier=classifier, 
+              title="EVAL", 
+              class_names=None, 
+              fontsize=fontsize, 
+              device=device,
+              percent_data=percent_data)
 
 
 # Choose model and hyperparameters
@@ -174,8 +224,23 @@ lr = .01
 # Initialize, train, and evaluate model
 model = InitializeModel(model, load_path = None, classifier = classifier, input_size = num_features_ns, device = device)
 print(type(model))
-train(model = model, n_epochs = n_epochs, lr = lr, train_loader = train_loader_ns, val_loader = val_loader_ns, classifier = classifier, device = device)
-eval_and_plot(model, test_loader_ns, classifier=classifier, title="EVAL", class_names=None, fontsize=fontsize, device=device)
+train(model = model, 
+      n_epochs = n_epochs, 
+      lr = lr, 
+      train_loader = train_loader_ns, 
+      val_loader = val_loader_ns,
+      classifier = classifier, 
+      device = device,
+      percent_data=percent_data
+      )
+eval_and_plot(model, 
+              test_loader_ns, 
+              classifier=classifier, 
+              title="EVAL", 
+              class_names=None, 
+              fontsize=fontsize, 
+              device=device,
+              percent_data = percent_data)
 
 
 
