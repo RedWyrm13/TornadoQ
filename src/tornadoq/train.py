@@ -4,7 +4,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 import torch.nn as nn
 from tornadoq.helper import accuracy, resolve_device
 import os
-def train(model, n_epochs, lr, train_loader, val_loader, classifier, device = None):
+def train(model, n_epochs, lr, train_loader, val_loader, classifier, device = None, percent_data = 1.0):
 
     device = resolve_device(device)
     model = model.to(device)
@@ -91,7 +91,7 @@ def train(model, n_epochs, lr, train_loader, val_loader, classifier, device = No
         if val_metric > best_val_metric:
             best_val_metric = val_metric
             os.makedirs("models", exist_ok=True)
-            save_path = "models/best_accuracy_epoch{epoch}.pt"
+            save_path = "models/best_accuracy_epoch{epoch}_percent_data{percent_data}.pt"
             torch.save({
                 "state_dict": model.state_dict(),
                 "history": history,
@@ -101,7 +101,7 @@ def train(model, n_epochs, lr, train_loader, val_loader, classifier, device = No
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             os.makedirs("models", exist_ok=True)
-            save_path = f"models/best_valLoss_epoch{epoch}.pt"
+            save_path = f"models/best_valLoss_epoch{epoch}percent_data{percent_data}.pt"
             torch.save({
                 "state_dict": model.state_dict(),
                 "history": history,

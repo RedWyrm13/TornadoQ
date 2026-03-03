@@ -9,12 +9,36 @@ from pathlib import Path
 import time
 
 
-def _read_table(path: str) -> pd.DataFrame:
+from pathlib import Path
+import pandas as pd
+
+def _read_table(path: str, percent_data: float = 1.0) -> pd.DataFrame:
+    if not (0.0 <= percent_data <= 1.0):
+        raise ValueError("percent_data must be between 0 and 1")
+
     ext = Path(path).suffix.lower()
-    if ext in {".xlsx", ".xls"}:
-        return pd.read_excel(path)
-    elif ext == ".csv":
-        return pd.read_csv(path)
+
+    if ext == ".csv":
+        if percent_data == 1.0:
+            return pd.read_csv(path)
+
+        # Count total rows (minus header)
+        with open(path, "r") as f:
+            total_rows = sum(1 for _ in f) - 1
+
+        rows_to_read = int(total_rows * percent_data)
+
+        return pd.read_csv(path, nrows=rows_to_read)
+
+    elif ext in {".xlsx", ".xls"}:
+        df = pd.read_excel(path)
+
+        if percent_data == 1.0:
+            return df
+
+        rows_to_keep = int(len(df) * percent_data)
+        return df.iloc[:rows_to_keep]
+
     else:
         raise ValueError(f"Unsupported file type: {ext}")
 
@@ -35,12 +59,19 @@ def _read_table_debug(path: str) -> pd.DataFrame:
 
     return df
 
-def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_filename=None, shadow_options = None, debug = False):
+def DataMaker(TRAIN_FILE, 
+              TEST_FILE, 
+              VALIDATION_FILE, 
+              withShadows=False, 
+              output_filename=None, 
+              shadow_options = None, 
+              debug = False, 
+              percent_data = 1.0):
     
     if debug == True:
-        df_train = _read_table_debug(TRAIN_FILE) 
-        df_test  = _read_table_debug(TEST_FILE)
-        df_val   = _read_table_debug(VALIDATION_FILE)
+        df_train = _read_table_debug(TRAIN_FILE, percent_data) 
+        df_test  = _read_table_debug(TEST_FILE, percent_data)
+        df_val   = _read_table_debug(VALIDATION_FILE, percent_data)
             
     else:
         df_train = _read_table(TRAIN_FILE) 
@@ -49,7 +80,7 @@ def DataMaker(TRAIN_FILE, TEST_FILE, VALIDATION_FILE, withShadows=False, output_
 
     if withShadows:
         def apply_shadows(df):
-            shadow_df = generate_shadows(df, **shadow_options)
+            shadow_df = generate_shadows(df, **shadow_options,)
             return extend_features(shadow_df, df)
         start = time.time()
         df_train = apply_shadows(df_train)

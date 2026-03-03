@@ -160,7 +160,7 @@ def plot_roc_multiclass_ovr(y_true, y_score, title, class_names=None, fontsize=1
     return macro_auc, class_aucs
 
 
-def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=None, fontsize=12, device=None):
+def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=None, fontsize=12, device=None, percent_data = 1.0):
     safe_title = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in str(title))
     device = resolve_device(device)
     
@@ -191,13 +191,13 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
                        title=f"{title} — Confusion Matrix", 
                        class_names=["0", "1"], 
                        fontsize=fontsize, 
-                       filename='./images/' + safe_title + "confusion_matrix.png")
+                       filename='./images/' + safe_title + f"confusion_matrix_percent_data{percent_data}.png")
         
         plot_roc_binary(y_true, 
                         y_prob, 
                         title=f"{title} — ROC", 
                         fontsize=fontsize,
-                        filename='./images/' + safe_title + "roc.png")
+                        filename='./images/' + safe_title + f"roc_percent_data{percent_data}.png")
         return {"auc": auc_score, 
                 "f1": f1, "acc": acc, 
                 "csi": csi}
@@ -219,7 +219,7 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
                        title=f"{title} — Confusion Matrix", 
                        class_names=class_names, 
                        fontsize=fontsize,
-                       filename = './images/' + safe_title + 'confusion_matrix.png')
+                       filename = './images/' + safe_title + f'confusion_matrix_percent_data{percent_data}.png')
 
         macro_auc, per_class_aucs = plot_roc_multiclass_ovr(
             y_true,
@@ -227,7 +227,7 @@ def eval_and_plot(model, loader, classifier="binary", title="EVAL", class_names=
             class_names=class_names,
             title=f"{title} — ROC (OVR)",
             fontsize=fontsize,
-            filename='./images/' + safe_title + "roc.png"
+            filename='./images/' + safe_title + f"roc_percent_data{percent_data}.png"
         )
         return {"auc_ovr": auc_ovr, 
                 "macro_f1": f1, 
