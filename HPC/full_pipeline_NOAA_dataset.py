@@ -52,7 +52,8 @@ df_train_ns, df_test_ns, df_val_ns = DataMaker(TRAIN_FILE,
                                                VAL_FILE, 
                                                withShadows = False, 
                                                output_filename=None,
-                                               debug=debug)
+                                               debug=debug,
+                                               percent_data=percent_data)
 
 # With Shadows
 shadow_options = {
@@ -71,7 +72,8 @@ df_train_ws, df_test_ws, df_val_ws = DataMaker(TRAIN_FILE,
                                                withShadows = True, 
                                                output_filename="original_shadow_enhanced.csv", 
                                                shadow_options = shadow_options,
-                                               debug = debug)
+                                               debug = debug,
+                                               percent_data=percent_data)
 print("df_train_ws:", df_train_ws)
 # Preprocessing
 # with shadows (ws)
