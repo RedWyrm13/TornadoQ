@@ -24,7 +24,7 @@ print("IMPORTS FINISHED!")
 parser = argparse.ArgumentParser(description="Load dataset with partial percentage")
 parser.add_argument("--percent_data", type = str, required=True, help = "Percentage of data to use in experiment")
 args = parser.parse_args()
-percent_data = args.percent_data
+percent_data = float(args.percent_data)
 classifier = 'binary' # binary or multiclass
 
 # These can be in either .xlsx or .csv
