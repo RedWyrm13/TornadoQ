@@ -65,7 +65,7 @@ shadow_options = {
     "all_weight2": False,
     "save": True,
 }
-balance = None
+balance = 'smote'
 df_train_ws, df_test_ws, df_val_ws = DataMaker(TRAIN_FILE, 
                                                TEST_FILE, 
                                                VAL_FILE, 
@@ -81,14 +81,16 @@ X_train_ws, y_train_ws, X_test_ws, y_test_ws, X_val_ws, y_val_ws = Preprocess(df
                                                                               df_test_ws, 
                                                                               df_val_ws, 
                                                                               balance = balance, 
-                                                                              classes = classifier)
+                                                                              classes = classifier,
+                                                                              )
 print("X_train_ws", X_train_ws)
 # Without shadows
 X_train_ns, y_train_ns, X_test_ns, y_test_ns, X_val_ns, y_val_ns = Preprocess(df_train_ns, 
                                                                               df_test_ns,
                                                                               df_val_ns,
                                                                               balance = balance,
-                                                                              classes = classifier)
+                                                                              classes = classifier,
+                                                                              )
 
 # Prepare train, val and test data with shadows
 train_data_ws = ClassificationDataset(X_train_ws, y_train_ws)
