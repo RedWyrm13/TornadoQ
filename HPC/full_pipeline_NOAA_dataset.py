@@ -58,7 +58,7 @@ df_train_ns, df_test_ns, df_val_ns = DataMaker(TRAIN_FILE,
 # With Shadows
 shadow_options = {
     "pair_mode": "all",
-    "ring_paulis": ["XY", "ZZ"],
+    "ring_paulis": [],
     "T": 3000,
     "shots": 1000,
     "seed": 123,
