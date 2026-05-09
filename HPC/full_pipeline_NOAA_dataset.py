@@ -62,7 +62,7 @@ shadow_options = {
     "T": 3000,
     "shots": 1000,
     "seed": 123,
-    "all_weight2": False,
+    "all_weight2": True,
     "save": True,
 }
 balance = 'smote'
