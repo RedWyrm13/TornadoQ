@@ -208,12 +208,12 @@ train(model = model,
       device = device,
       percent_data=percent_data)
 
-eval_and_plot(model, 
-              test_loader_ns, 
-              classifier=classifier, 
-              title="EVAL", 
-              class_names=None, 
-              fontsize=fontsize, 
+eval_and_plot(model,
+              test_loader_ns,
+              classifier=classifier,
+              title="EVAL StronglyEntangling",
+              class_names=None,
+              fontsize=fontsize,
               device=device,
               percent_data=percent_data)
 
@@ -237,14 +237,14 @@ train(model = model,
       device = device,
       percent_data=percent_data
       )
-eval_and_plot(model, 
-              test_loader_ns, 
-              classifier=classifier, 
-              title="EVAL", 
-              class_names=None, 
-              fontsize=fontsize, 
+eval_and_plot(model,
+              test_loader_ns,
+              classifier=classifier,
+              title="EVAL RandomLayer",
+              class_names=None,
+              fontsize=fontsize,
               device=device,
-              percent_data = percent_data)
+              percent_data=percent_data)
 
 
 
