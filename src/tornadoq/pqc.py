@@ -25,7 +25,7 @@ def SE_feature_embedding(f, phi, n_qubits):
 # ---------------------------------------------------
 def InitializePQC(circuit, device):
     n_qubits = 8
-    n_layers = 1
+    n_layers = 3
     dev = qml.device("default.qubit", wires=n_qubits)
 
     if circuit == "RandomLayer":

@@ -38,6 +38,43 @@ def InitializeModel(model, load_path = None, classifier = "binary", input_size =
 # ===========================================================
 #
 #############################################################
+# LUQPI DNN
+# Main branch uses only original features — the shadow head is an
+# auxiliary reconstruction target that forces the encoder to learn
+# quantum-relevant structure during training, then is discarded at inference.
+class BinaryDNN_LUQPI(nn.Module):
+    def __init__(self, n_orig, n_shadow):
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(n_orig, 64),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.Linear(64, 128),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.Linear(64, 1),
+            nn.Sigmoid()
+        )
+        self.shadow_head = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.LeakyReLU(0.2),
+            nn.Linear(64, n_shadow),
+        )
+
+    def forward(self, x_orig, x_shadow=None):
+        h = self.encoder(x_orig)
+        pred = self.classifier(h)
+        if x_shadow is not None:
+            return pred, self.shadow_head(h)
+        return pred
+
+
+#############################################################
 # Binary DNN - Variable Input
 class BinaryDNN(nn.Module):
     def __init__(self, input_size):

@@ -119,7 +119,25 @@ class ClassificationDataset(Dataset):
         return len(self.X)
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
-   
+
+class LUQPIDataset(Dataset):
+    """Yields (x_orig, x_shadow, y) triples for LUQPI training."""
+    def __init__(self, X_orig, X_shadow, y):
+        def _to_tensor(a):
+            if hasattr(a, 'values'):
+                a = a.values
+            return torch.from_numpy(a.copy()).float()
+        self.X_orig   = _to_tensor(X_orig)
+        self.X_shadow = _to_tensor(X_shadow)
+        self.y        = _to_tensor(y if not hasattr(y, 'values') else y.values)
+
+    def __len__(self):
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        return self.X_orig[idx], self.X_shadow[idx], self.y[idx]
+
+
 def Preprocess(df_train, df_test, df_val, balance=None, classes='binary'):
     # Separate features and targets
     X_train = df_train.drop(['ef_class', 'ef_binary'], axis=1, errors='ignore')
